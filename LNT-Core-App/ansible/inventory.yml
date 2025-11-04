@@ -1,0 +1,7 @@
+all:
+  hosts:
+    pi-1:
+      ansible_host: 192.168.1.101 #ip address
+      ansible_user: pi #username (just optional metadata we may want)
+      ansible_ssh_pass: raspberry #for testing, we will use ssh keys later
+

@@ -1,0 +1,21 @@
+- name: Provision new LNT Device Host
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Enable and start Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Run LNT Device Host container
+      docker_container:
+        name: lnt_device_host
+        image:
+        state:
+        restart_policy:
