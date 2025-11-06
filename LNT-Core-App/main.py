@@ -15,14 +15,6 @@ started_at = datetime.now(timezone.utc)
 
 app = FastAPI(title="LNT App Core Service")
 
-# CORS so GUI can talk to the API during dev
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],           # tighten in prod
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # create singletons once and stash on app.state
 dm = DeviceManager()
