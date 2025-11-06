@@ -9,6 +9,12 @@ INVENTORY_PATH = "ansible/inventory.yml"
 HOST_API_PORT = 5001       # adjust to match your Device Host agent
 HTTP_TIMEOUT_S = 5         # simple timeout for REST calls
 
+# Map DUT status -> color for GUI
+DUT_STATUS_COLOR = {
+    "running": "green",
+    "idle": "yellow",
+    "offline": "red",
+}
 class DeviceManager:
     def __init__(self):
         self.inventory = self.load_inventory()
@@ -20,11 +26,14 @@ class DeviceManager:
             return {"all": {"hosts": {}}}
         with open(INVENTORY_PATH, "r") as f:
             data = yaml.safe_load(f) or {}
+
+        # Normalize to ensure keys exist even if file was partially edited
         if "all" not in data:
             data["all"] = {}
         if "hosts" not in data["all"]:
             data["all"]["hosts"] = {}
         return data
+
 
     # writes current python object back to inventory.yml
     def save_inventory(self):
@@ -32,9 +41,15 @@ class DeviceManager:
         with open(INVENTORY_PATH, "w") as f:
             yaml.safe_dump(self.inventory, f, sort_keys=True)
 
+    #QUERIES
     # returns a list of all hosts in inventory
     def list_hosts(self):
         return list(self.inventory["all"]["hosts"].keys())
+
+    # gets all device hosts (full records)
+    def get_hosts(self):
+        return self.inventory["all"]["hosts"]
+
 
     # adds new device host (also provisions via Ansible)
     def add_host(self, hostname, ip_address):
@@ -61,33 +76,86 @@ class DeviceManager:
         self.save_inventory()
         return self.inventory["all"]["hosts"][hostname]
 
-    # gets all device hosts (full records)
-    def get_hosts(self):
-        return self.inventory["all"]["hosts"]
-
     # removes device host
     def remove_hosts(self, hostname):
         self.inventory["all"]["hosts"].pop(hostname, None)
         self.save_inventory()
 
     # refresh a single host's status and DUT list by calling the Device Host REST API
-    # expected endpoints on the host:
+    # expected endpoints on the device host:
     #   GET http://<ip>:<PORT>/api/health -> {"status":"idle"|"busy"}
     #   GET http://<ip>:<PORT>/api/duts   -> {"count":2,"types":["CC26x2","CC13x2"]}
-    def refresh_host_status(self, hostname):
+    def refresh_host_status(self, hostname: str):
         host = self.inventory["all"]["hosts"][hostname]
         ip = host["ansible_host"]
         base = f"http://{ip}:{HOST_API_PORT}/api"
 
+        # Pull host health (busy/idle) and DUT details from the agent.
         health = requests.get(f"{base}/health", timeout=HTTP_TIMEOUT_S).json()
-        duts = requests.get(f"{base}/duts", timeout=HTTP_TIMEOUT_S).json()
+        duts_resp = requests.get(f"{base}/duts", timeout=HTTP_TIMEOUT_S).json()
 
+        # update host status
         host["status"] = health.get("status", "idle")
         host["last_seen_epoch"] = int(time.time())
-        host["duts"] = {
-            "count": int(duts.get("count", 0)),
-            "types": list(duts.get("types", [])),
-        }
+
+        items = duts_resp.get("items")
+
+        if isinstance(items, list):
+            # normalize each item and attach color
+            normalized = []
+            status_counts = {"running": 0, "idle": 0, "offline": 0}
+            types = []
+
+            #Try several common keys to derive a unique DUT identifier; fallback to auto-number.
+            for it in items:
+                dut_id = str(it.get("id") or it.get("serial") or it.get("name") or f"dut-{len(normalized) + 1}")
+                dut_type = str(it.get("type") or "")
+                status = str(it.get("status") or "idle").lower()
+                if status not in ("running", "idle", "offline"):
+                    status = "idle"
+                color = DUT_STATUS_COLOR[status]
+                normalized.append({
+                    "id": dut_id,
+                    "type": dut_type,
+                    "status": status,
+                    "color": color,
+                })
+                if dut_type:
+                    types.append(dut_type)
+                status_counts[status] += 1
+
+            # Persist a full DUT block the GUI can render without more processing.
+            host["duts"] = {
+                "count": len(normalized),
+                "types": sorted(set(types)),
+                "items": normalized,
+                "status_counts": status_counts,
+            }
+
+        else:
+            # Legacy/simple shape: {"count": 2, "types": ["CC26x2","CC13x2"]}
+            count = int(duts_resp.get("count", 0))
+            types = list(duts_resp.get("types", []))
+
+            # Without per-DUT info, assume all idle so GUI shows yellow
+            items = [{
+                "id": f"dut-{i + 1}",
+                "type": (types[i] if i < len(types) else ""),
+                "status": "idle",
+                "color": DUT_STATUS_COLOR["idle"],
+            } for i in range(count)]
+
+            host["duts"] = {
+                "count": count,
+                "types": types,
+                "items": items,
+                "status_counts": {
+                    "running": 0,
+                    "idle": count,
+                    "offline": 0
+                },
+            }
+
         self.save_inventory()
         return host
 
@@ -95,7 +163,7 @@ class DeviceManager:
     def refresh_all_statuses(self):
         return {h: self.refresh_host_status(h) for h in self.list_hosts()}
 
-    # tiny stats block your GUI/CLI can show
+    # tiny stats block GUI/CLI can show
     def inventory_stats(self):
         hosts = self.inventory["all"]["hosts"]
         status_counts = {"idle": 0, "busy": 0, "disconnected": 0, "pending": 0, "provisioning": 0, "error": 0}
