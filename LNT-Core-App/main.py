@@ -1,7 +1,7 @@
 # main.py
 from datetime import datetime, timezone
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+
 
 #routers
 from api import device_routes, test_routes, user_routes
