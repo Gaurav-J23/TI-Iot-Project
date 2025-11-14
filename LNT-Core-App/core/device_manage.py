@@ -7,7 +7,7 @@ import requests
 from utils.ansible_runner import provision_host
 
 INVENTORY_PATH = "ansible/inventory.yml"
-HOST_API_PORT = 5001       # adjust to match your Device Host agent
+HOST_API_PORT = 8001
 HTTP_TIMEOUT_S = 5         # simple timeout for REST calls
 
 # Map DUT status -> color for GUI
