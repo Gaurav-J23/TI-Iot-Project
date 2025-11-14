@@ -1,0 +1,30 @@
+Job:
+    name: "Firmware Flashing and Serial Logging"
+    description: "This job flashes firmware to DUTs and captures serial logs"
+
+Firmwrare:
+    # FLASH DUT USBIP
+    LNT_DEVICE_HOST_1:
+        serial_port_a: path/to/image
+        LS3489DW: path/to/image
+    LNT_DEVICE_HOST_2:
+        serial_port_b: path/to/image
+
+serial_steams:
+    LNT_DEVICE_HOST_1:
+        serial_port: LNT_VAR_1
+        text_steam: true
+        serial_port: LNT_VAR_2
+        text_steam: false
+    LNT_DEVICE_HOST_2:
+        serial_port: LNT_VAR_3
+        text_steam: true
+
+serial_logs:
+    LNT_DEVICE_HOST_1:
+        serial_port_x: router_table_x.log
+    LNT_DEVICE_HOST_2:
+        serial_port_y: router_table_y.log
+
+test_duration: 1d 2h 30m
+
