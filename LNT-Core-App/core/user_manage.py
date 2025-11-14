@@ -38,3 +38,10 @@ class UserManager:
             return False
         u.password = new_password
         return True
+
+    def remove_user(self, username: str) -> bool:
+        """Remove a user from the system. Returns True if user was removed, False if user doesn't exist."""
+        if username in self._users:
+            del self._users[username]
+            return True
+        return False
