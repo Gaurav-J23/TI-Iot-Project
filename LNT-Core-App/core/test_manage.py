@@ -2,10 +2,19 @@
 from datetime import datetime
 
 class TestManager:
-    def init(self):
+    def __init__(self):
         # { test_id: { "name": str, "status": str, "started_at": iso, "finished_at": iso|None, "logs": [str] } }
         self.tests = {}
         self.next_id = 1
+
+    def stats(self) -> dict:
+        running = sum(1 for t in self.tests.values() if t["status"] == "running")
+        finished = sum(1 for t in self.tests.values() if t["status"] in ("passed", "failed", "cancelled"))
+        return {
+            "total_tests": len(self.tests),
+            "running": running,
+            "finished": finished,
+        }
 
     def start_test(self, name: str) -> int:
         test_id = self.next_id

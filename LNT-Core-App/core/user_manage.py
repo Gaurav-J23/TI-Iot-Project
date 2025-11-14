@@ -8,7 +8,7 @@ class _User:
     roles: List[str]
 
 class UserManager:
-    def init(self):
+    def __init__(self):
         # seed one default user so /user/login works immediately
         self._users: Dict[str, _User] = {
             "admin": _User(username="admin", password="admin123", roles=["admin"])
@@ -36,3 +36,17 @@ class UserManager:
             return False
         u.password = new_password
         return True
+
+    def remove_user(self, username: str) -> bool:
+        if username in self._users:
+            del self._users[username]
+            return True
+        return False
+
+    def stats(self) -> dict:
+        total = len(self._users)
+        admins = sum(1 for u in self._users.values() if "admin" in u.roles)
+        return {
+            "total_users": total,
+            "admins": admins,
+        }

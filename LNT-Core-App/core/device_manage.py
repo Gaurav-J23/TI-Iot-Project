@@ -64,12 +64,18 @@ class DeviceManager:
         self.save_inventory()
 
         # run Ansible playbook
-        provision_host(
-            hostname=hostname,
-            ip_address=ip_address,
-            inventory_path=INVENTORY_PATH,
-            playbook_path="ansible/provision_host.yml",
-        )
+        # provision_host(
+        #     hostname=hostname,
+        #     ip_address=ip_address,
+        #     inventory_path=INVENTORY_PATH,
+        #     playbook_path="ansible/provision_host.yml",
+        # )
+        #         # run Ansible playbook
+        # provision_host(
+        #     hostname=hostname,
+        #     inventory_path=INVENTORY_PATH,
+        # )
+
 
         # mark as ready; real status will be updated by refresh_host_status
         self.inventory["all"]["hosts"][hostname]["status"] = "idle"
