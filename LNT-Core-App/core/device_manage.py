@@ -4,11 +4,18 @@ import yaml
 import os
 import time
 import requests
+from dotenv import load_dotenv
 from utils.ansible_runner import provision_host
 
+# Load environment variables
+load_dotenv()
+
 INVENTORY_PATH = "ansible/inventory.yml"
-HOST_API_PORT = 8001
 HTTP_TIMEOUT_S = 5         # simple timeout for REST calls
+
+def get_host_agent_url():
+    """Get Host Agent URL from environment variable, fallback to default"""
+    return os.getenv("HOST_AGENT_URL", "http://localhost:8001/").rstrip("/")
 
 # Map DUT status -> color for GUI
 DUT_STATUS_COLOR = {
@@ -89,20 +96,27 @@ class DeviceManager:
 
     # refresh a single host's status and DUT list by calling the Device Host REST API
     # expected endpoints on the device host:
-    #   GET http://<ip>:<PORT>/api/health -> {"status":"idle"|"busy"}
-    #   GET http://<ip>:<PORT>/api/duts   -> {"count":2,"types":["CC26x2","CC13x2"]}
+    #   GET ${HOST_AGENT_URL}/health -> {"status":"healthy"}
+    #   GET ${HOST_AGENT_URL}/duts   -> {"count":2,"types":["CC26x2","CC13x2"]}
     def refresh_host_status(self, hostname: str):
         host = self.inventory["all"]["hosts"][hostname]
-        ip = host["ansible_host"]
-        base = f"http://{ip}:{HOST_API_PORT}/api"
+        # Use HOST_AGENT_URL from environment, or construct from inventory if not set
+        host_agent_url = get_host_agent_url()
+        if host_agent_url and not host_agent_url.startswith("http://localhost"):
+            base_url = host_agent_url.rstrip("/")
+        else:
+            # Fallback: use IP from inventory
+            ip = host.get("ansible_host", "localhost")
+            base_url = f"http://{ip}:8010"
 
         try:
-            # Pull host health (busy/idle) and DUT details from the agent.
-            health = requests.get(f"{base}/health", timeout=HTTP_TIMEOUT_S).json()
-            duts_resp = requests.get(f"{base}/duts", timeout=HTTP_TIMEOUT_S).json()
+            # Pull host health and DUT details from the agent.
+            health = requests.get(f"{base_url}/health", timeout=HTTP_TIMEOUT_S).json()
+            duts_resp = requests.get(f"{base_url}/duts", timeout=HTTP_TIMEOUT_S).json()
 
-            # update host status
-            host["status"] = health.get("status", "idle")
+            # update host status (health endpoint returns "healthy", map to "idle" for compatibility)
+            health_status = health.get("status", "healthy")
+            host["status"] = "idle" if health_status == "healthy" else health_status
             host["last_seen_epoch"] = int(time.time())
 
             items = duts_resp.get("items")

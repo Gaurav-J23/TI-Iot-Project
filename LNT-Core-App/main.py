@@ -1,5 +1,10 @@
 from fastapi import FastAPI
 from api import device_routes, test_routes, user_routes
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = FastAPI(title="LNT App Core Service")
 
