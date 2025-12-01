@@ -7,28 +7,18 @@ all:
     lnt_device_hosts:
       hosts:
         LNT_DEVICE_HOST_1:
-          ansible_host: lnt-device-host-1.local
-          ansible_user: lnt
-          ansible_ssh_private_key_file: ~/.ssh/lnt_key
-          serial_ports:
-            - serial_port_a
-            - serial_port_b
-          dut_devices:
-            - LS3489DW
-            - DUT-X
-        LNT_DEVICE_HOST_2:
-          ansible_host: lnt-device-host-2.local
-          ansible_user: lnt
-          ansible_ssh_private_key_file: ~/.ssh/lnt_key
-          serial_ports:
-            - serial_port_b
-            - serial_port_c
-          dut_devices:
-            - DUT-Y
-      vars:
-        # Common variables for all device hosts
-        usbip_enabled: true
-        usbip_port: 3240
-        log_directory: /var/log/lnt
-        image_storage: /opt/lnt/images
+          ansible_host: 192.168.1.102
+          ansible_user: reedarad1sh
+          status: pending
+          last_seen_epoch: 0
+          openocd_cfg: /etc/openocd/boards/cc26x2.cfg
+
+          duts:
+            count: 0
+            types: [ ]
+            items: [ ]
+            status_counts:
+              running: 0
+              idle: 0
+              offline: 0
 

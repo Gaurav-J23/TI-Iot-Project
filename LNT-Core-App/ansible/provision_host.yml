@@ -6,20 +6,31 @@
   hosts: lnt_device_hosts
   become: yes
   vars:
-    usbip_port: 3240
     log_directory: /var/log/lnt
     image_storage: /opt/lnt/images
     lnt_user: lnt
     lnt_group: lnt
 
   tasks:
-    - name: Ensure LNT user exists
-      user:
-        name: "{{ lnt_user }}"
-        group: "{{ lnt_group }}"
-        shell: /bin/bash
-        create_home: yes
-        groups: dialout,plugdev
+
+    - name: Install utilities
+      apt:
+        name:
+          - curl
+          - zip
+          - unzip
+          - git
+          - python3
+          - python3-pip
+          - python3-serial
+          - screen
+          - minicom
+        state: present
+
+    - name: Install OpenOCD
+      apt:
+        name: openocd
+        state: present
 
     - name: Create LNT directories
       file:
@@ -34,75 +45,29 @@
         - /opt/lnt/scripts
         - /opt/lnt/config
 
-    - name: Install required packages
-      package:
-        name:
-          - usbip
-          - usbutils
-          - python3
-          - python3-pip
-          - python3-serial
-          - screen
-          - minicom
-        state: present
-
-    - name: Enable USBIP kernel modules
-      modprobe:
-        name: "{{ item }}"
-        state: present
-      loop:
-        - usbip-core
-        - usbip-host
-        - usbip-vudc
-
-    - name: Enable USBIP service
-      systemd:
-        name: usbipd
-        enabled: yes
-        state: started
-
-    - name: Configure USBIP daemon
-      template:
-        src: usbipd.conf.j2
-        dest: /etc/usbipd.conf
+    - name: Install TI XDS110 udev rules
+      copy:
+        content: |
+          ATTRS{idVendor}=="0451", ATTRS{idProduct}=="bef3", MODE="0666", GROUP="{{ lnt_group }}"
+        dest: /etc/udev/rules.d/60-xds110.rules
         owner: root
         group: root
         mode: '0644'
-      notify: restart usbipd
-
-    - name: Set up serial port permissions
-      lineinfile:
-        path: /etc/udev/rules.d/99-serial-permissions.rules
-        line: "KERNEL==\"ttyUSB[0-9]*\", MODE=\"0666\", GROUP=\"{{ lnt_group }}\""
-        create: yes
 
     - name: Reload udev rules
       command: udevadm control --reload-rules
-      changed_when: false
 
-    - name: Install Python dependencies
-      pip:
-        name:
-          - pyserial
-          - requests
-        state: present
-        executable: pip3
+    - name: Deploy OpenOCD interface configs
+      copy:
+        src: files/openocd/interfaces/
+        dest: /etc/openocd/interfaces/
+        mode: '0644'
 
-    - name: Create USBIP mount script
-      template:
-        src: usbip_mount.sh.j2
-        dest: /opt/lnt/scripts/usbip_mount.sh
-        owner: "{{ lnt_user }}"
-        group: "{{ lnt_group }}"
-        mode: '0755'
-
-    - name: Create USBIP unmount script
-      template:
-        src: usbip_umount.sh.j2
-        dest: /opt/lnt/scripts/usbip_umount.sh
-        owner: "{{ lnt_user }}"
-        group: "{{ lnt_group }}"
-        mode: '0755'
+    - name: Deploy OpenOCD board configs
+      copy:
+        src: files/openocd/boards/
+        dest: /etc/openocd/boards/
+        mode: '0644'
 
     - name: Create serial log capture script
       template:
@@ -128,10 +93,4 @@
         owner: root
         group: root
         mode: '0644'
-
-  handlers:
-    - name: restart usbipd
-      systemd:
-        name: usbipd
-        state: restarted
 
