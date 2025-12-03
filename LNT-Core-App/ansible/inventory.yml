@@ -3,22 +3,4 @@
 # This inventory file defines the device hosts that manage DUTs (Devices Under Test)
 
 all:
-  children:
-    lnt_device_hosts:
-      hosts:
-        LNT_DEVICE_HOST_1:
-          ansible_host: 192.168.1.102
-          ansible_user: reedarad1sh
-          status: pending
-          last_seen_epoch: 0
-          openocd_cfg: /etc/openocd/boards/cc26x2.cfg
-
-          duts:
-            count: 0
-            types: [ ]
-            items: [ ]
-            status_counts:
-              running: 0
-              idle: 0
-              offline: 0
-
+  hosts: {}

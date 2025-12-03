@@ -70,29 +70,25 @@ class DeviceManager:
 
     #add host w openocd config
     def add_host(self, hostname, ip_address):
-        """Add a new device host and assign a default OpenOCD config."""
+        """Register a new LNT Device Host (Raspberry Pi) into the inventory."""
+
+        self.inventory.setdefault("all", {}).setdefault("hosts", {})
+
         self.inventory["all"]["hosts"][hostname] = {
             "ansible_host": ip_address,
+
+            # Core App uses this to call the Host Agent REST API
+            "host_agent_url": f"http://{ip_address}:8001",
+
+            # tracking
             "status": "pending",
             "last_seen_epoch": int(time.time()),
 
-            # 🔵 NEW: required for OpenOCD flashing
-            "openocd_cfg": DEFAULT_OPENOCD_CFG,
-
-            "duts": {
-                "count": 0,
-                "types": [],
-                "items": [],
-                "status_counts": {"running": 0, "idle": 0, "offline": 0}
-            }
+            # empty DUT list for now
+            "dut_list": {}
         }
 
         self.save_inventory()
-
-        # Provision via Ansible
-        provision_host(hostname, INVENTORY_PATH)
-
-        return self.inventory["all"]["hosts"][hostname]
 
 
     #remove host
