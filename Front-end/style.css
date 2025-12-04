@@ -505,3 +505,49 @@ header {
 #tab-hosts .dashboard {
   grid-template-columns: 1fr;   /* single full-width column */
 }
+h2
+{
+
+  font-style: italic;
+  text-align: center;
+}
+.user-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 260px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-row label {
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.user-form input,
+.user-form select {
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.add-user-btn {
+  padding: 10px;
+  background: #c00;
+  color: white;
+  border: none;
+  width: 120px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.add-user-btn:hover {
+  background: #a00;
+}

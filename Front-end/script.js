@@ -1,3 +1,7 @@
+// Redirect if not logged in
+if (!localStorage.getItem("lnt_user")) {
+  window.location.href = "login.html";
+}
 // --- TAB SWITCHING ---
 document.querySelectorAll(".nav li").forEach((tab) => {
   tab.addEventListener("click", () => {
@@ -402,6 +406,85 @@ async function updateStatistics() {
   document.getElementById("statTotalTestTime").textContent =
     stats.total_test_hours.toFixed(2) + " hrs";
 }
+function logoutUser() {
+  localStorage.removeItem("lnt_user");
+  localStorage.removeItem("lnt_role");
+  window.location.href = "login.html";
+}
+//------------------------------------------
+// USER MANAGEMENT FUNCTIONS
+//------------------------------------------
+
+async function loadUsers() {
+  const listEl = document.getElementById("userList");
+  listEl.innerHTML = "<li>Loading...</li>";
+
+  try {
+    const resp = await fetch("http://127.0.0.1:8000/user/list");
+    const data = await resp.json();
+
+    listEl.innerHTML = ""; // Clear old items
+
+    data.users.forEach((username) => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        ${username}
+        <button class="delete-btn" onclick="removeUser('${username}')">✖</button>
+      `;
+      listEl.appendChild(li);
+    });
+  } catch (err) {
+    listEl.innerHTML = "<li>Error loading users.</li>";
+  }
+}
+
+async function addUser(event) {
+  event.preventDefault();
+
+  const username = document.getElementById("newUserName").value.trim();
+  const password = document.getElementById("newUserPass").value.trim();
+  const role = document.getElementById("newUserRole").value;
+  const msg = document.getElementById("addUserMsg");
+
+  if (!username || !password) {
+    msg.textContent = "Username and password required.";
+    msg.style.color = "red";
+    return;
+  }
+
+  try {
+    const resp = await fetch(
+      `http://127.0.0.1:8000/user/add?username=${username}&password=${password}&role=${role}`,
+      { method: "POST" }
+    );
+
+    if (!resp.ok) {
+      const errorData = await resp.json();
+      msg.textContent = errorData.detail || "Error adding user.";
+      msg.style.color = "red";
+      return;
+    }
+
+    msg.textContent = `User '${username}' added.`;
+    msg.style.color = "green";
+
+    loadUsers();
+  } catch (err) {
+    msg.textContent = "Network error.";
+    msg.style.color = "red";
+  }
+}
+
+async function removeUser(username) {
+  if (!confirm(`Remove user '${username}'?`)) return;
+
+  await fetch(`http://127.0.0.1:8000/user/remove?username=${username}`, {
+    method: "POST",
+  });
+
+  loadUsers();
+}
+document.getElementById("addUserForm").addEventListener("submit", addUser);
 
 document.getElementById("refreshBtn").addEventListener("click", updateDevices);
 updateDevices();

@@ -16,6 +16,8 @@
         <li data-tab="statistics">Statistics</li>
         <li data-tab="hosts" class="active">Hosts</li>
         <li data-tab="management">Management</li>
+        <li data-tab="users">Users</li>
+        <li onclick="logoutUser()">Logout</li>
       </ul>
     </aside>
 
@@ -27,6 +29,7 @@
       <!-- THIS IS THE HOSTS TASb -->
       <section id="tab-hosts" class="tab-content active">
         <section class="dashboard">
+          <h2>Hosts</h2>
           <div class="device-panel card">
             <h2>Devices</h2>
             <ul id="deviceList" class="device-list"></ul>
@@ -159,6 +162,46 @@
             <p class="management-hint">
               Use the ✖ button to remove a host from LNT.
             </p>
+          </div>
+        </div>
+      </section>
+      <section id="tab-users" class="tab-content" style="display: none">
+        <h2>User Management</h2>
+
+        <div class="management-grid">
+          <!-- Add user form -->
+          <div class="card management-card">
+            <h3>Add User</h3>
+
+            <form id="addUserForm" class="user-form">
+              <div class="form-row">
+                <label>Username</label>
+                <input id="newUserName" type="text" required />
+              </div>
+
+              <div class="form-row">
+                <label>Password</label>
+                <input id="newUserPass" type="password" required />
+              </div>
+
+              <div class="form-row">
+                <label>Role</label>
+                <select id="newUserRole">
+                  <option value="tester">Tester</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              <button type="submit" class="add-user-btn">Add User</button>
+
+              <p id="addUserMsg"></p>
+            </form>
+          </div>
+
+          <!-- User list -->
+          <div class="card management-card">
+            <h3>Existing Users</h3>
+            <ul id="userList"></ul>
           </div>
         </div>
       </section>
