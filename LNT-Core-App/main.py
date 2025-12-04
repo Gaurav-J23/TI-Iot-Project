@@ -1,12 +1,14 @@
 from fastapi import FastAPI
 from api import device_routes, test_routes, user_routes
 from dotenv import load_dotenv
+from core.test_manage import TestManager
 import os
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = FastAPI(title="LNT App Core Service")
+app.state.tm = TestManager()
 
 # include route modules
 app.include_router(device_routes.router, prefix="/device", tags=["Device"])

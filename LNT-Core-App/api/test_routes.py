@@ -14,22 +14,27 @@ class StartTestBody(BaseModel):
 def start_test(body: StartTestBody, request: Request):
     tm = request.app.state.tm
 
-    # 1) Start the test record
-    test_id = tm.start_test(body.name)
-
-    # 2) Read YAML if config_path is provided and accessible
+    # 1) Load YAML FIRST
     spec = None
     if body.config_path and os.path.exists(body.config_path):
         with open(body.config_path, "r") as f:
             spec = yaml.safe_load(f)
+
+    # 2) Start the test WITH the YAML spec
+    test_id = tm.start_test(
+        body.name,
+        test_config=spec,
+        test_yaml_path=body.config_path
+    )
+
+    # 3) Log that YAML was loaded (or not)
+    if spec is not None:
         tm.update_test(test_id, log=f"Loaded YAML spec from {body.config_path}")
     else:
-        tm.update_test(test_id, log=f"cli started test with config={body.config_path}, images={body.image_paths}")
-
-    # 3) use `spec` to drive DeviceManager + Device Host calls
-    #    e.g., configure firmware flashing, serial streams, logs based on YAML
+        tm.update_test(test_id, log=f"Started test with config={body.config_path}, images={body.image_paths}")
 
     return {"message": f"Started test '{body.name}'", "test_id": test_id}
+
 
 @router.post("/{test_id}/stop")
 def stop_test(test_id: int, request: Request):
