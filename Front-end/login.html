@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>LNT Login</title>
+    <link rel="stylesheet" href="style.css" />
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: white;
+        font-family: Arial, sans-serif;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ---- CENTERED LOGIN AREA ---- */
+      .login-wrapper {
+        flex: 1; /* fill full remaining vertical height */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .login-card input,
+      .login-card button {
+        width: 100%;
+        box-sizing: border-box; /* Makes all elements EXACT same visual width */
+        padding: 12px;
+        border-radius: 4px;
+        font-size: 15px;
+      }
+
+      /* Inputs */
+      .login-card input {
+        margin: 10px 0; /* SAME spacing as button */
+        border: 1px solid #ccc;
+      }
+
+      /* Button */
+      .login-card button {
+        margin: 10px 0; /* CHANGE THIS — matches inputs exactly */
+        background: #838588;
+        border: none;
+        color: white;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      /* Hover */
+      .login-card button:hover {
+        background: #d3110a;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- TOP LEFT LOGO -->
+    <div class="top-bar">
+      <img src="./images/Screenshot 2025-11-24 154307.png" alt="TI Logo" />
+    </div>
+
+    <!-- LOGIN AREA -->
+    <div class="login-wrapper">
+      <div class="login-card">
+        <h2>Log In</h2>
+
+        <form id="loginForm">
+          <input id="loginUser" type="text" placeholder="Username" required />
+          <input
+            id="loginPass"
+            type="password"
+            placeholder="Password"
+            required
+          />
+
+          <button type="submit">Login</button>
+        </form>
+
+        <p id="loginMessage"></p>
+      </div>
+    </div>
+
+    <script>
+      async function attemptLogin() {
+        const username = document.getElementById("loginUser").value.trim();
+        const password = document.getElementById("loginPass").value.trim();
+        const msg = document.getElementById("loginMessage");
+
+        if (!username || !password) {
+          msg.textContent = "Please enter username and password.";
+          msg.style.color = "red";
+          return;
+        }
+
+        const url = `http://127.0.0.1:8000/user/login?username=${encodeURIComponent(
+          username
+        )}&password=${encodeURIComponent(password)}`;
+        const resp = await fetch(url, { method: "POST" });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          msg.textContent = "Invalid credentials";
+          msg.style.color = "red";
+          localStorage.removeItem("lnt_user"); // important to prevent bypass
+          return;
+        }
+
+        localStorage.setItem("lnt_user", username);
+        window.location.href = "index.html";
+      }
+    </script>
+    <script>
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault(); // stop page reload
+          attemptLogin(); // call your existing login function
+        });
+    </script>
+  </body>
+</html>

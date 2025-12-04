@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Distributed IoT Test Network</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>LNT</h2>
+      </div>
+      <ul class="nav">
+        <li data-tab="jobs">Jobs</li>
+        <li data-tab="statistics">Statistics</li>
+        <li data-tab="hosts" class="active">Hosts</li>
+        <li data-tab="management">Management</li>
+        <li data-tab="users">Users</li>
+        <li onclick="logoutUser()">Logout</li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <header>
+        <h1>Distributed IoT Test Network</h1>
+      </header>
+
+      <!-- THIS IS THE HOSTS TASb -->
+      <section id="tab-hosts" class="tab-content active">
+        <section class="dashboard">
+          <h2>Hosts</h2>
+          <div class="device-panel card">
+            <h2>Devices</h2>
+            <ul id="deviceList" class="device-list"></ul>
+          </div>
+        </section>
+
+        <button id="refreshBtn">Refresh</button>
+      </section>
+
+      <!--JOBS TAB-->
+      <section id="tab-jobs" class="tab-content" style="display: none">
+        <h2 class="section-title">Jobs</h2>
+
+        <!-- Job Cards Will Go Here -->
+        <div id="jobsContainer" class="jobs-container"></div>
+      </section>
+      <!-- JOB DETAIL VIEW (hidden by default) -->
+      <section id="jobDetailView" class="tab-content" style="display: none">
+        <button id="jobBackBtn" class="back-button">← Back to Jobs</button>
+
+        <div class="job-detail-header">
+          <span id="jobDetailStatus" class="job-status-dot"></span>
+          <h2 id="jobDetailTitle" class="job-detail-title"></h2>
+        </div>
+
+        <div class="job-detail-description-box">
+          <h3>Description</h3>
+          <p id="jobDetailDescription"></p>
+        </div>
+
+        <!-- Log Files Section -->
+        <div class="log-files">
+          <h3>Log Files</h3>
+          <ul id="logFileList"></ul>
+        </div>
+
+        <!-- Streaming Variable Viewer -->
+        <div class="stream-container">
+          <div class="stream-header">
+            <h3 id="streamName"></h3>
+            <div class="scroll-arrows">
+              <button id="scrollUp">▲</button>
+              <button id="scrollDown">▼</button>
+            </div>
+          </div>
+
+          <div id="streamBox" class="stream-box"></div>
+        </div>
+      </section>
+
+      <section id="tab-statistics" class="tab-content" style="display: none">
+        <h2 class="section-title">LNT Statistics</h2>
+
+        <div class="statistics-container">
+          <!-- BLOCK: TOTAL JOBS -->
+          <div class="stat-card">
+            <h3>Total Jobs</h3>
+            <p id="statTotalJobs" class="stat-number">0</p>
+          </div>
+
+          <!-- BLOCK: JOB OUTCOME COUNTS -->
+          <div class="stat-card">
+            <h3>Job Outcomes</h3>
+            <ul class="stat-list">
+              <li>Passed: <span id="statPassed"></span></li>
+              <li>Failed: <span id="statFailed"></span></li>
+              <li>Canceled: <span id="statCanceled"></span></li>
+              <li>Running: <span id="statRunning"></span></li>
+            </ul>
+          </div>
+
+          <!-- BLOCK: TOTAL TEST TIME -->
+          <div class="stat-card">
+            <h3>Total Test Time</h3>
+            <p id="statTotalTestTime" class="stat-number">0h</p>
+          </div>
+
+          <!-- BLOCK: TOTAL LOGS -->
+          <div class="stat-card">
+            <h3>Total Logs Written</h3>
+            <p id="statTotalLogs" class="stat-number">0</p>
+          </div>
+
+          <!-- BLOCK: STREAMING DATA -->
+          <div class="stat-card">
+            <h3>Total Streamed Variables</h3>
+            <p id="statStreamVars" class="stat-number">0</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-management" class="tab-content" style="display: none">
+        <h2 class="section-title">Management</h2>
+
+        <div class="management-grid">
+          <!-- LEFT: ADD HOST FORM -->
+          <div class="card management-card">
+            <h3>Add LNT Device Host</h3>
+
+            <form id="addHostForm" class="management-form">
+              <div class="form-row">
+                <label for="hostNameInput">Host Name</label>
+                <input
+                  id="hostNameInput"
+                  type="text"
+                  required
+                  placeholder="e.g. pi-03"
+                />
+              </div>
+
+              <div class="form-row">
+                <label for="hostIpInput">IP Address</label>
+                <input
+                  id="hostIpInput"
+                  type="text"
+                  required
+                  placeholder="e.g. 192.168.1.23"
+                />
+              </div>
+
+              <button type="submit">Add Host</button>
+              <p id="addHostMessage" class="management-message"></p>
+            </form>
+          </div>
+
+          <!-- RIGHT: CURRENT HOSTS LIST -->
+          <div class="card management-card">
+            <h3>Current LNT Hosts</h3>
+            <ul id="managementHostList" class="device-list"></ul>
+            <p class="management-hint">
+              Use the ✖ button to remove a host from LNT.
+            </p>
+          </div>
+        </div>
+      </section>
+      <section id="tab-users" class="tab-content" style="display: none">
+        <h2>User Management</h2>
+
+        <div class="management-grid">
+          <!-- Add user form -->
+          <div class="card management-card">
+            <h3>Add User</h3>
+
+            <form id="addUserForm" class="user-form">
+              <div class="form-row">
+                <label>Username</label>
+                <input id="newUserName" type="text" required />
+              </div>
+
+              <div class="form-row">
+                <label>Password</label>
+                <input id="newUserPass" type="password" required />
+              </div>
+
+              <div class="form-row">
+                <label>Role</label>
+                <select id="newUserRole">
+                  <option value="tester">Tester</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              <button type="submit" class="add-user-btn">Add User</button>
+
+              <p id="addUserMsg"></p>
+            </form>
+          </div>
+
+          <!-- User list -->
+          <div class="card management-card">
+            <h3>Existing Users</h3>
+            <ul id="userList"></ul>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+    <img
+      src="./images/Screenshot 2025-11-24 154307.png"
+      class="corner-logo"
+      alt="Texas inst logo"
+    />
+  </body>
+</html>

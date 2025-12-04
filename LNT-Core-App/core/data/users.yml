@@ -1,0 +1,17 @@
+users:
+  Muhammad:
+    password: Amer
+    roles:
+    - tester
+  admin:
+    password: admin123
+    roles:
+    - admin
+  iop:
+    password: qwe
+    roles:
+    - tester
+  iopi:
+    password: op
+    roles:
+    - tester

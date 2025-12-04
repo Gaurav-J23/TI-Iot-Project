@@ -56,3 +56,45 @@ def get_logs(test_id: int, request: Request):
     if not test:
         raise HTTPException(status_code=404, detail="Test not found")
     return {"logs": test.get("logs", [])}
+@router.get("/stats")
+def get_test_statistics(request: Request):
+    tm = request.app.state.tm
+    tests = tm.get_tests()
+
+    total_jobs = len(tests)
+
+    passed = sum(1 for t in tests.values() if t["status"] == "passed")
+    failed = sum(1 for t in tests.values() if t["status"] == "failed")
+    canceled = sum(1 for t in tests.values() if t["status"] in ("cancelled", "canceled"))
+    running = sum(1 for t in tests.values() if t["status"] == "running")
+
+    total_logs = sum(len(t["logs"]) for t in tests.values())
+
+    # Count serial stream variables
+    stream_count = 0
+    for t in tests.values():
+        for host, streams in t["serial_streams"].items():
+            if isinstance(streams, list):
+                stream_count += len(streams)
+            elif isinstance(streams, dict):
+                stream_count += len(streams.keys())
+
+    # Compute hours
+    import datetime
+    total_hours = 0
+    for t in tests.values():
+        if t["finished_at"] and t["started_at"]:
+            start = datetime.datetime.fromisoformat(t["started_at"])
+            end = datetime.datetime.fromisoformat(t["finished_at"])
+            total_hours += (end - start).total_seconds() / 3600
+
+    return {
+        "total_jobs": total_jobs,
+        "passed": passed,
+        "failed": failed,
+        "canceled": canceled,
+        "running": running,
+        "total_logs": total_logs,
+        "total_stream_vars": stream_count,
+        "total_test_hours": total_hours
+    }
