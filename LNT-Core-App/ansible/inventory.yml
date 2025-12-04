@@ -1,6 +1,15 @@
----
-# Ansible Inventory for LNT Device Hosts
-# This inventory file defines the device hosts that manage DUTs (Devices Under Test)
-
 all:
-  hosts: {}
+  hosts:
+    testing:
+      ansible_host: '12'
+      host_agent_url: http://12:8001
+      status: pending
+      last_seen_epoch: 1764877989
+      dut_list: {}
+      openocd_cfg: /etc/openocd/boards/cc26x2.cfg
+    another-test:
+      ansible_host: '12312'
+      host_agent_url: http://12312:8001
+      status: pending
+      last_seen_epoch: 1764881210
+      dut_list: {}
