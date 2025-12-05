@@ -1,9 +1,11 @@
 # logic for tests
 
 from datetime import datetime, timedelta
-from typing import Dict, Optional, List, Any
+from typing import Dict, Optional, Any
 import re
-from flashing.openocd_flash import OpenOCDFlasher
+import requests
+
+from device_manage import DeviceManager
 
 
 class TestManager:
@@ -14,85 +16,104 @@ class TestManager:
         #   "status": str,
         #   "started_at": iso,
         #   "finished_at": iso|None,
-        #   "test_duration": str (e.g., "1d 2h 30m"),
+        #   "test_duration": str,
         #   "expires_at": iso|None,
-        #   "test_config": dict (parsed test.yaml),
+        #   "test_config": dict,
         #   "logs": [str],
         #   "serial_logs": dict,
         #   "serial_streams": dict,
         #   "dut_images": dict,
-        #   "device_hosts": List[str]
+        #   "device_hosts": list
         # } }
         self.tests: Dict[int, Dict[str, Any]] = {}
         self.next_id = 1
 
+
+    #parse duration
     def _parse_duration(self, duration_str: str) -> timedelta:
-        """Parse duration string like '1d 2h 30m' into timedelta."""
-        days = 0
-        hours = 0
-        minutes = 0
+        """Parse duration like '1d 2h 30m' into timedelta."""
+        days = hours = minutes = 0
 
         day_match = re.search(r'(\d+)d', duration_str)
         hour_match = re.search(r'(\d+)h', duration_str)
         min_match = re.search(r'(\d+)m', duration_str)
 
-        if day_match:
-            days = int(day_match.group(1))
-        if hour_match:
-            hours = int(hour_match.group(1))
-        if min_match:
-            minutes = int(min_match.group(1))
+        if day_match: days = int(day_match.group(1))
+        if hour_match: hours = int(hour_match.group(1))
+        if min_match: minutes = int(min_match.group(1))
 
         return timedelta(days=days, hours=hours, minutes=minutes)
 
-    #Flash all DUTs listed in the test config using OpenOCD.
-    #Expects each DUT host in inventory/test_config to include:
-    #"openocd_cfg": "/etc/openocd/boards/cc26x2.cfg"
-    def _flash_all_duts(self, test_id: int) -> bool:
 
+    #send api call to rest agent
+    def _send_flash_request(self, host_ip: str, image_path: str, openocd_cfg: str):
+        """Send REST POST request to Pi agent to flash firmware."""
+        url = f"http://{host_ip}:8010/flash"
+        payload = {
+            "image_path": image_path,
+            "openocd_cfg": openocd_cfg
+        }
+
+        try:
+            resp = requests.post(url, json=payload, timeout=30)
+            return resp.json()
+        except Exception as e:
+            return {
+                "returncode": 1,
+                "stderr": f"REST failure: {str(e)}",
+                "stdout": ""
+            }
+
+
+    #flash dut with restAPI point
+    def _flash_all_duts(self, test_id: int) -> bool:
         test = self.tests[test_id]
         dut_images = test.get("dut_images", {})
 
-        flasher = OpenOCDFlasher()
+        dm = DeviceManager()
 
-        test["logs"].append(f"[{datetime.utcnow().isoformat()}] Starting OpenOCD flashing...")
+        test["logs"].append(
+            f"[{datetime.utcnow().isoformat()}] Sending flash requests to Device Hosts..."
+        )
 
         for host, dut_dict in dut_images.items():
-
-            # the DUT dict should contain:
-            #   { "dut1": "path/to/image.bin", "openocd_cfg": "/etc/openocd/boards/cc26x2.cfg" }
-            openocd_cfg = dut_dict.get("openocd_cfg")
-
-            if not openocd_cfg:
-                test["logs"].append(
-                    f"[Flash] ERROR: No 'openocd_cfg' provided for host '{host}'. Skipping flashing."
-                )
+            try:
+                host_ip = dm.get_hosts()[host]["ansible_host"]
+            except KeyError:
+                test["logs"].append(f"[Flash] ERROR: Host '{host}' not found in inventory.")
                 return False
 
-            # flash every DUT entry except openocd_cfg
+            openocd_cfg = dut_dict.get("openocd_cfg")
+            if not openocd_cfg:
+                test["logs"].append(f"[Flash] ERROR: No openocd_cfg for '{host}'.")
+                return False
+
             for dut_name, image_path in dut_dict.items():
                 if dut_name == "openocd_cfg":
-                    continue
+                    continue  # skip cfg key
 
-                result = flasher.flash(image_path, openocd_cfg)
+                result = self._send_flash_request(host_ip, image_path, openocd_cfg)
 
-                if result["returncode"] == 0:
+                if result.get("returncode") == 0:
                     test["logs"].append(
-                        f"[Flash] SUCCESS: {dut_name} on {host} flashed successfully."
+                        f"[Flash] SUCCESS: {dut_name} flashed on {host}"
                     )
                 else:
                     test["logs"].append(
-                        f"[Flash] ERROR: Failed to flash {dut_name} on {host}.\n"
-                        f"STDERR: {result['stderr']}"
+                        f"[Flash] ERROR: {dut_name} on {host}\n"
+                        f"STDERR: {result.get('stderr')}"
                     )
                     test["status"] = "failed"
                     test["finished_at"] = datetime.utcnow().isoformat()
                     return False
 
-        test["logs"].append(f"[{datetime.utcnow().isoformat()}] Flashing complete.")
+        test["logs"].append(
+            f"[{datetime.utcnow().isoformat()}] Flashing complete."
+        )
         return True
 
-    #Starting test
+
+    #start test
     def start_test(self, name: str, test_config: Optional[Dict[str, Any]] = None,
                    test_yaml_path: Optional[str] = None) -> int:
 
@@ -107,11 +128,12 @@ class TestManager:
         serial_streams = {}
         serial_logs = {}
 
+        # Parse test YAML structure
         if test_config:
             description = test_config.get("Job", {}).get("description", "")
             test_duration_str = test_config.get("test_duration")
 
-            # DUT firmware section
+            # Firmware section
             firmware = test_config.get("Firmwrare", {}) or test_config.get("Firmware", {})
             for host_name in firmware.keys():
                 if host_name not in device_hosts:
@@ -132,12 +154,12 @@ class TestManager:
                     device_hosts.append(host_name)
                 serial_logs[host_name] = logs
 
-            # Expiration
+            # Expiration calculation
             if test_duration_str:
                 duration = self._parse_duration(test_duration_str)
                 expires_at = (now + duration).isoformat()
 
-        # Store test entry
+        # Create test entry
         self.tests[test_id] = {
             "name": name,
             "description": description,
@@ -155,28 +177,29 @@ class TestManager:
             "device_hosts": device_hosts
         }
 
-        #flash step before test starts
+        #flash dut
         flash_success = self._flash_all_duts(test_id)
 
         if not flash_success:
-            # If flashing fails, the test fails immediately
             fail_time = datetime.utcnow().isoformat()
             self.tests[test_id]["status"] = "failed"
             self.tests[test_id]["finished_at"] = fail_time
-            self.tests[test_id]["logs"].append(f"[{fail_time}] Test failed due to flashing error.")
+            self.tests[test_id]["logs"].append(
+                f"[{fail_time}] Test failed due to flashing error."
+            )
             self.next_id += 1
             return test_id
 
-        # Continue normal start
+        # Normal continuation
         self.next_id += 1
         return test_id
 
-    #stopping test
+
+    #stop test
     def stop_test(self, test_id: int, reason: str = "stopped") -> bool:
         test = self.tests.get(test_id)
         if not test:
             return False
-
         if test["status"] not in ("running", "pending"):
             return False
 
@@ -184,9 +207,11 @@ class TestManager:
         test["status"] = "cancelled" if reason == "cancelled" else "stopped"
         test["finished_at"] = now
         test["logs"].append(f"[{now}] Test {reason} by user")
+
         return True
 
-    #obtaining logs
+
+    #retrieve log
     def get_test_logs(self, test_id: int, log_type: str = "all") -> Optional[Dict[str, Any]]:
         test = self.tests.get(test_id)
         if not test:
@@ -197,7 +222,7 @@ class TestManager:
             "name": test["name"],
             "status": test["status"],
             "started_at": test["started_at"],
-            "finished_at": test["finished_at"]
+            "finished_at": test["finished_at"],
         }
 
         if log_type in ("all", "text"):
@@ -210,6 +235,7 @@ class TestManager:
             result["serial_streams"] = test["serial_streams"]
 
         return result
+
 
     #update test
     def update_test(self, test_id: int, status: str | None = None, log: str | None = None,
@@ -245,10 +271,12 @@ class TestManager:
 
         return test
 
+
+    #test lookup
     def get_tests(self) -> dict:
         return self.tests
 
-    def get_test(self, test_id: int) -> dict | None:
+    def get_test(self, test_id: int) -> Optional[dict]:
         return self.tests.get(test_id)
 
     def is_test_expired(self, test_id: int) -> bool:
@@ -258,4 +286,5 @@ class TestManager:
 
         expires_at = datetime.fromisoformat(test["expires_at"])
         return datetime.utcnow() > expires_at
+
 
