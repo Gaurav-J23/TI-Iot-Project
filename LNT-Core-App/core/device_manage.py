@@ -90,6 +90,30 @@ class DeviceManager:
 
         self.save_inventory()
 
+    #add dut
+    def add_dut(self, hostname, dut_name, dut_type, cfg_path, usb_port):
+        """
+        Add a DUT under a specific device host.
+        Each DUT gets its own OpenOCD config and USB mapping.
+        """
+
+        hosts = self.inventory.get("all", {}).get("hosts", {})
+        if hostname not in hosts:
+            raise ValueError(f"Host '{hostname}' not found in inventory.")
+
+        # Ensure dut_list exists
+        host_entry = hosts[hostname]
+        host_entry.setdefault("dut_list", {})
+
+        # Create the DUT entry
+        host_entry["dut_list"][dut_name] = {
+            "type": dut_type,
+            "config": cfg_path,  # the OpenOCD config file
+            "usb_port": usb_port,  # e.g., "1-1.3"
+            "status": "idle"
+        }
+
+        self.save_inventory()
 
     #remove host
     def remove_host(self, hostname):
