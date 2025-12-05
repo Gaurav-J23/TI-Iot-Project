@@ -1,13 +1,21 @@
 #define device endpoints
 # LNT-Core-App/api/device_routes.py
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from core.device_manage import DeviceManager
+from pydantic import BaseModel
 import os
 import requests
 
 router = APIRouter()
 device_manage = DeviceManager()
+
+class AddDUTRequest(BaseModel):
+    hostname: str
+    dut_name: str
+    dut_type: str
+    cfg_path: str
+    usb_port: str
 
 @router.get("/list")
 def list_devices():
@@ -38,6 +46,27 @@ def refresh_all_hosts():
 @router.get("/stats")
 def get_stats():
     return device_manage.inventory_stats()
+
+@router.post("/dut/add")
+def add_dut(request: AddDUTRequest):
+    """Add a DUT to a device host"""
+    try:
+        device_manage.add_dut(
+            hostname=request.hostname,
+            dut_name=request.dut_name,
+            dut_type=request.dut_type,
+            cfg_path=request.cfg_path,
+            usb_port=request.usb_port
+        )
+        return {
+            "message": f"DUT '{request.dut_name}' added to host '{request.hostname}'",
+            "hostname": request.hostname,
+            "dut_name": request.dut_name
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error adding DUT: {str(e)}")
 
 @router.get("/test-connection")
 def test_host_connection():
