@@ -115,6 +115,7 @@ class DeviceManager:
 
         self.save_inventory()
 
+
     #remove host
     def remove_host(self, hostname):
         if hostname in self.inventory["all"]["hosts"]:
