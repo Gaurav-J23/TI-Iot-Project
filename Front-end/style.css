@@ -119,8 +119,6 @@ header h1 {
   margin-right: 10px;
 }
 
-
-
 .dut {
   width: 20px;
   height: 20px;
@@ -128,8 +126,6 @@ header h1 {
   display: inline-block;
   margin: 3px;
 }
-
-
 
 /* ====== BUTTON ====== */
 button {
@@ -144,7 +140,6 @@ button {
   margin-bottom: 20px;
   transition: background-color 0.2s ease;
 }
-
 
 .corner-logo {
   position: fixed;
@@ -173,7 +168,6 @@ header {
 
 .dut-text {
   font-weight: 700; /* bold */
-  
 }
 
 .host-group {
@@ -184,7 +178,7 @@ header {
   font-weight: 900;
   font-size: 18px;
   margin-bottom: 6px;
-  
+
   color: #333;
 }
 
@@ -196,7 +190,6 @@ header {
 
 .dut-text {
   font-weight: 700;
-  
 }
 
 .status-running {
@@ -209,9 +202,7 @@ header {
   color: #ef4444;
 }
 .dut-text {
-    font-weight: 900 !important; 
-    
-    
+  font-weight: 900 !important;
 }
 
 .jobs-container {
@@ -221,7 +212,7 @@ header {
   padding: 10px;
 }
 .job-card {
-  border: 2px solid #7f1a1a;   /* green border like his sketch */
+  border: 2px solid #7f1a1a; /* green border like his sketch */
   border-radius: 8px;
   padding: 14px;
   background: #ffffff;
@@ -259,150 +250,150 @@ header {
 
 /* Status Colors */
 .job-running {
-  background-color: #facc15;   /* yellow */
+  background-color: #facc15; /* yellow */
 }
 .job-done {
-  background-color: #10b981;   /* green */
+  background-color: #10b981; /* green */
 }
 .job-canceled {
-  background-color: #ef4444;   /* red */
+  background-color: #ef4444; /* red */
 }
 /* ===== JOB DETAIL VIEW (SAFE, NO CONFLICTS) ===== */
 
 .job-detail-header {
-    margin: 20px 20px 10px 20px;
+  margin: 20px 20px 10px 20px;
 }
 
 #jobDetailTitle {
-    font-size: 24px;
-    font-weight: 900;
-    color: #222;
-    margin-bottom: 5px;
+  font-size: 24px;
+  font-weight: 900;
+  color: #222;
+  margin-bottom: 5px;
 }
 
 #jobDetailStatus {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-left: 10px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 10px;
 }
 
 /* Log file area */
 .log-files {
-    margin: 20px;
-    padding: 15px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    background: white;
+  margin: 20px;
+  padding: 15px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
 }
 
 .log-files h3 {
-    margin-top: 0;
-    color: #b00000;
+  margin-top: 0;
+  color: #b00000;
 }
 
 .log-disabled {
-    color: gray;
-    cursor: default;
+  color: gray;
+  cursor: default;
 }
 
 .log-files ul {
-    padding-left: 20px;
+  padding-left: 20px;
 }
 
 /* Stream container */
 .stream-container {
-    margin: 20px;
-    padding: 15px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    background: white;
+  margin: 20px;
+  padding: 15px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
 }
 
 .stream-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .stream-box {
-    margin-top: 12px;
-    height: 220px;
-    overflow-y: auto;
-    padding: 12px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    white-space: pre-wrap;
+  margin-top: 12px;
+  height: 220px;
+  overflow-y: auto;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  white-space: pre-wrap;
 }
 
 /* Scroll buttons (UP, DOWN) */
 .scroll-arrows button {
-    background-color: #cc0000;
-    border: none;
-    padding: 6px 10px;
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
+  background-color: #cc0000;
+  border: none;
+  padding: 6px 10px;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
 .scroll-arrows button:hover {
-    background-color: #990000;
+  background-color: #990000;
 }
 
 /* Back button */
 .back-button {
-    margin: 20px;
-    background-color: #cc0000;
-    padding: 8px 14px;
-    border-radius: 6px;
-    color: white;
+  margin: 20px;
+  background-color: #cc0000;
+  padding: 8px 14px;
+  border-radius: 6px;
+  color: white;
 }
 /* Push job detail content slightly to the right */
 .job-detail-wrapper {
-    margin-left: 40px;     /* adjust until it looks perfect */
+  margin-left: 40px; /* adjust until it looks perfect */
 }
 
 /* Put dot + title on one line */
 .job-detail-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 20px;
-    margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  margin-bottom: 10px;
 }
 
 /* Title formatting */
 .job-detail-title {
-    font-size: 24px;
-    font-weight: 900;
-    margin: 0;
+  font-size: 24px;
+  font-weight: 900;
+  margin: 0;
 }
 
 /* Status dot next to title */
 .job-status-dot {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
 }
 .job-detail-description-box {
-    margin: 20px;
-    padding: 15px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    background-color: #ffffff;
+  margin: 20px;
+  padding: 15px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background-color: #ffffff;
 }
 
 .job-detail-description-box h3 {
-    margin-top: 0;
-    color: #b00000; /* Texas Instruments dark red */
+  margin-top: 0;
+  color: #b00000; /* Texas Instruments dark red */
 }
 
 .job-detail-description-box p {
-    margin-top: 8px;
-    color: #444;
-    font-size: 15px;
+  margin-top: 8px;
+  color: #444;
+  font-size: 15px;
 }
 .delete-host-btn {
   margin-left: 10px;
@@ -429,7 +420,7 @@ header {
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   padding: 18px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .stat-card h3 {
@@ -503,11 +494,9 @@ header {
 }
 /* Hosts tab: make the Devices panel span full width */
 #tab-hosts .dashboard {
-  grid-template-columns: 1fr;   /* single full-width column */
+  grid-template-columns: 1fr; /* single full-width column */
 }
-h2
-{
-
+h2 {
   font-style: italic;
   text-align: center;
 }
@@ -550,4 +539,9 @@ h2
 
 .add-user-btn:hover {
   background: #a00;
+}
+.device-list {
+  list-style: disc; /* enable bullets */
+  padding-left: 20px; /* indent bullets nicely */
+  margin: 0;
 }

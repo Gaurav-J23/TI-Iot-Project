@@ -277,55 +277,72 @@ async function addHost(hostname, ipAddress) {
 // ********************************* */
 async function updateDevices() {
   try {
-    // Call backend instead of using mock data
+    // Fetch host/device inventory from backend
     const response = await fetch("http://127.0.0.1:8000/device/list");
     if (!response.ok) {
       throw new Error("Failed to fetch device list");
     }
 
     const data = await response.json();
-
     const hosts = data.hosts || {};
     const list = document.getElementById("deviceList");
     if (!list) return;
 
-    list.innerHTML = "";
+    list.innerHTML = ""; // Clear UI list
 
     Object.entries(hosts).forEach(([hostname, host]) => {
       // --- HOST CONTAINER ---
       const groupDiv = document.createElement("div");
       groupDiv.classList.add("host-group");
 
-      // Host title (pi-01, pi-02, etc.)
+      // HOST TITLE
       const title = document.createElement("div");
       title.classList.add("host-title");
       title.textContent = hostname;
       groupDiv.appendChild(title);
 
-      // Get DUTs from backend structure
-      const duts = host.duts?.items || [];
+      // --- DUT LIST CONTAINER (UL for bullets) ---
+      const ul = document.createElement("ul");
+      ul.classList.add("device-list");
+      groupDiv.appendChild(ul);
 
+      // --- CONVERT DUTs BASED ON NEW FORMAT ---
+      let duts = [];
+
+      if (host.dut_list) {
+        // NEW FORMAT:
+        // dut_list:
+        //   SERIAL1: {status: "running"}
+        //   SERIAL2: {status: "idle"}
+        duts = Object.entries(host.dut_list).map(([id, info]) => ({
+          id: id,
+          status: info.status || "unknown",
+        }));
+      } else if (host.duts?.items) {
+        // OLD FORMAT:  duts: { items: [ {id, status}, ... ] }
+        duts = host.duts.items;
+      }
+
+      // --- RENDER EACH DUT ---
       duts.forEach((dut) => {
         const li = document.createElement("li");
         li.classList.add("device-item");
 
         const span = document.createElement("span");
         span.classList.add("dut-text");
-
-        // Example: "SN001 : running"
         span.textContent = `${dut.id} : ${dut.status}`;
 
-        // Color by status (your CSS already defines .status-running, etc.)
+        // Color by status
         span.classList.add(`status-${dut.status}`);
 
         li.appendChild(span);
-        groupDiv.appendChild(li);
+        ul.appendChild(li);
       });
 
       list.appendChild(groupDiv);
     });
 
-    // If you have a Management tab host list helper, keep it in sync:
+    // Update Management tab list if it exists
     if (typeof refreshManagementHosts === "function") {
       refreshManagementHosts(hosts);
     }
