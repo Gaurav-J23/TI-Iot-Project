@@ -84,8 +84,11 @@ class DeviceManager:
             "status": "pending",
             "last_seen_epoch": int(time.time()),
 
+            "openocd_cfg": DEFAULT_OPENOCD_CFG,
             # empty DUT list for now
             "dut_list": {}
+
+
         }
 
         self.save_inventory()
