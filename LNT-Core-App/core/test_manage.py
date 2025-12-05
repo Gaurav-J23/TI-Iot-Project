@@ -5,7 +5,7 @@ from typing import Dict, Optional, Any
 import re
 import requests
 
-from device_manage import DeviceManager
+from core.device_manage import DeviceManager
 
 
 class TestManager:
