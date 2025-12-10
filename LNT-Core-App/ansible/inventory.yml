@@ -1,19 +1,2 @@
 all:
-  hosts:
-    uj:
-      ansible_host: u
-      host_agent_url: http://u:8001
-      status: pending
-      last_seen_epoch: 1764893767
-      dut_list:
-        TEST-A:
-          status: running
-        TEST-B:
-          status: idle
-      openocd_cfg: /etc/openocd/boards/cc26x2.cfg
-    pi:
-      ansible_host: rer
-      host_agent_url: http://rer:8001
-      status: pending
-      last_seen_epoch: 1764895905
-      dut_list: {}
+  hosts: all
